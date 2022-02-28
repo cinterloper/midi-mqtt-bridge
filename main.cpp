@@ -22,7 +22,7 @@ bool halt;
 
 static void finish(int /*ignore*/) { halt = true; }
 
-void forward_midi(RtMidiIn *midiin) {
+void handle_midi_data(RtMidiIn *midiin, bool forward) {
     // check input queue.
     double stamp;
     std::vector<unsigned char> message;
@@ -39,7 +39,7 @@ void forward_midi(RtMidiIn *midiin) {
 
     if (nBytes > 0) {
         std::cout << "stamp = " << stamp << std::endl;
-        phao_publish("midi/test", result.str());
+        if (forward) { phao_publish("midi/test", result.str()); }
     }
 
 }
@@ -83,11 +83,11 @@ void midi_loop(bool connect, int device, const std::string &server) {
     // Install an interrupt handler function.
     halt = false;
     (void) signal(SIGINT, finish);
-
     while (!halt) {
-        forward_midi(midiin);
+        handle_midi_data(midiin, connect);
         SLEEP(2);
     }
+
 
     // Clean up
     cleanup:
